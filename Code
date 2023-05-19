@@ -1,0 +1,49 @@
+clc
+clear all
+close all
+
+figure
+t=0:0.1:15;
+x=sin(0.2*pi*t)+5*cos(0.4*pi*t);
+ts=0:0.2:15;
+xs=sin(0.2*pi*ts)+5*cos(0.4*pi*ts);
+[xq,SQNR]=Quantizer(xs,16);
+xq_unique= unique(xq);
+for i=1:1:length(xq_unique)
+    for j=1:1:length(xq)
+        if(xq(j)==xq_unique(i))
+            xq_coded(j)=i-1;
+        end
+    end
+end
+for i=1:1:length(xq_unique)
+    c=0;
+    for j=1:1:length(xq)
+        if xq_unique(i)==xq(j)
+            c=c+1;
+        end
+        prob(i)= c/length(xq);
+    end
+end
+[dictionary,L] = huffmandict(xq_unique,prob);
+xq_encoded = huffmanenco(xq,dictionary);
+xq_coded_unique=unique(xq_coded);
+for i=1:1:length(xq_coded_unique)
+    for j=1:1:length(xq_coded)
+        if(xq_coded(j)==xq_coded_unique(i))
+            xq_decoded(j)=xq_unique(i);
+        end
+    end
+end
+xq_decoded_hoff= huffmandeco(xq_encoded,dictionary);
+entropy=0;
+for i=1:1:length(xq_unique)
+    entropy=entropy+(prob(i)*log2(1/prob(i)));
+end
+eff = entropy/L;
+CR= ceil(log2(length(xq_unique)))/L;
+plot(t,x,'r',ts,xq_decoded,'b')
+xlabel('time')
+ylabel('sin(0.2*pi*t)')
+legend('x','xq_decoded')
+title('Input and Output Signals')
